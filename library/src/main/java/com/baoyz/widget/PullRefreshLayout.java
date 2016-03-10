@@ -51,6 +51,7 @@ public class PullRefreshLayout extends ViewGroup {
     private int mFrom;
     private boolean mNotify;
     private OnRefreshListener mListener;
+    private OnCancelListener mCancelListener;
     private int[] mColorSchemeColors;
 
     public int mDurationToStartPosition;
@@ -329,6 +330,9 @@ public class PullRefreshLayout extends ViewGroup {
                 } else {
                     mRefreshing = false;
                     animateOffsetToStartPosition();
+                    if (mCancelListener != null) {
+                        mCancelListener.onCancel();
+                    }
                 }
                 mActivePointerId = INVALID_POINTER;
                 return false;
@@ -522,6 +526,14 @@ public class PullRefreshLayout extends ViewGroup {
     }
 
     public static interface OnRefreshListener {
-        public void onRefresh();
+        void onRefresh();
+    }
+
+    public void setOnCancelListener(OnCancelListener listener) {
+        mCancelListener = listener;
+    }
+
+    public interface OnCancelListener{
+        void onCancel();
     }
 }
