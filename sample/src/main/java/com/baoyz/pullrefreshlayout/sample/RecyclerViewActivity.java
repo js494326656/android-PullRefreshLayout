@@ -10,6 +10,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.baoyz.widget.PullRefreshLayout;
 
@@ -40,7 +41,13 @@ public class RecyclerViewActivity extends Activity {
                     public void run() {
                         layout.setRefreshing(false);
                     }
-                }, 4000);
+                }, 6000);
+            }
+        });
+        layout.setOnCancelListener(new PullRefreshLayout.OnCancelListener() {
+            @Override
+            public void onCancel() {
+                Toast.makeText(RecyclerViewActivity.this,"cancel request",Toast.LENGTH_SHORT).show();
             }
         });
     }

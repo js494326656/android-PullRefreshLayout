@@ -218,7 +218,6 @@ public class PullRefreshLayout extends ViewGroup {
                 onSecondaryPointerUp(ev);
                 break;
         }
-
         return mIsBeingDragged;
     }
 
@@ -314,26 +313,33 @@ public class PullRefreshLayout extends ViewGroup {
                 if (mActivePointerId == INVALID_POINTER) {
                     return false;
                 }
+                final int pointerIndex = MotionEventCompat.findPointerIndex(ev, mActivePointerId);
+                final float y = MotionEventCompat.getY(ev, pointerIndex);
+                final float overscrollTop = (y - mInitialMotionY) * DRAG_RATE;
                 if (mRefreshing) {
                     if (mDispatchTargetTouchDown) {
                         mTarget.dispatchTouchEvent(ev);
                         mDispatchTargetTouchDown = false;
                     }
-                    return false;
+//                    return false;
                 }
-                final int pointerIndex = MotionEventCompat.findPointerIndex(ev, mActivePointerId);
-                final float y = MotionEventCompat.getY(ev, pointerIndex);
-                final float overscrollTop = (y - mInitialMotionY) * DRAG_RATE;
-                mIsBeingDragged = false;
                 if (overscrollTop > mTotalDragDistance) {
                     setRefreshing(true, true);
+                } else if (overscrollTop > 0 && overscrollTop <= mTotalDragDistance) {
+                    if (!mRefreshing) {
+                        animateOffsetToStartPosition();
+                        mRefreshing = false;
+                    }
                 } else {
-                    mRefreshing = false;
-                    animateOffsetToStartPosition();
-                    if (mCancelListener != null) {
-                        mCancelListener.onCancel();
+                    if (mRefreshing) {
+                        animateOffsetToStartPosition();
+                        if (mCancelListener != null) {
+                            mCancelListener.onCancel();
+                        }
+                        mRefreshing = false;
                     }
                 }
+                mIsBeingDragged = false;
                 mActivePointerId = INVALID_POINTER;
                 return false;
             }
@@ -533,7 +539,7 @@ public class PullRefreshLayout extends ViewGroup {
         mCancelListener = listener;
     }
 
-    public interface OnCancelListener{
+    public interface OnCancelListener {
         void onCancel();
     }
 }
