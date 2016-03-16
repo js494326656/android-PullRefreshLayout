@@ -44,7 +44,7 @@ public class PullRefreshLayout extends ViewGroup {
     private int mTotalDragDistance;
     private RefreshDrawable mRefreshDrawable;
     private int mCurrentOffsetTop;
-    private boolean mRefreshing;
+    private boolean mRefreshing,mLoading;
     private int mActivePointerId;
     private boolean mIsBeingDragged;
     private float mInitialMotionY;
@@ -363,6 +363,16 @@ public class PullRefreshLayout extends ViewGroup {
         mRefreshView.startAnimation(mAnimateToStartPosition);
     }
 
+    private void animateOffsetToEndPosition() {
+        mFrom = mCurrentOffsetTop;
+        mAnimateToStartPosition.reset();
+        mAnimateToStartPosition.setDuration(mDurationToStartPosition);
+        mAnimateToStartPosition.setInterpolator(mDecelerateInterpolator);
+        mAnimateToStartPosition.setAnimationListener(mToStartListener);
+        mRefreshView.clearAnimation();
+        mRefreshView.startAnimation(mAnimateToStartPosition);
+    }
+
     private void animateOffsetToCorrectPosition() {
         mFrom = mCurrentOffsetTop;
         mAnimateToCorrectPosition.reset();
@@ -414,6 +424,12 @@ public class PullRefreshLayout extends ViewGroup {
             } else {
                 animateOffsetToStartPosition();
             }
+        }
+    }
+
+    public void setLoading(boolean loading) {
+        if (mLoading != loading) {
+
         }
     }
 
@@ -505,6 +521,27 @@ public class PullRefreshLayout extends ViewGroup {
         }
     }
 
+    public boolean canChildScrollDown() {
+        if (android.os.Build.VERSION.SDK_INT < 14) {
+            if (mTarget instanceof AbsListView) {
+                final AbsListView absListView = (AbsListView) mTarget;
+                View lastChild = absListView.getChildAt(absListView.getChildCount() - 1);
+                if (lastChild != null) {
+                    return (absListView.getLastVisiblePosition() == (absListView.getCount() - 1))
+                            && lastChild.getBottom() > absListView.getPaddingBottom();
+                }
+                else
+                {
+                    return false;
+                }
+            } else {
+                return mTarget.getHeight() - mTarget.getScrollY() > 0;
+            }
+        } else {
+            return ViewCompat.canScrollVertically(mTarget, 1);
+        }
+    }
+
     @Override
     protected void onLayout(boolean changed, int l, int t, int r, int b) {
 
@@ -531,8 +568,18 @@ public class PullRefreshLayout extends ViewGroup {
         mListener = listener;
     }
 
-    public static interface OnRefreshListener {
+    public interface OnRefreshListener {
         void onRefresh();
+    }
+
+    private OnLoadListener onLoadListener = null;
+
+    public interface OnLoadListener{
+        void onLoad();
+    }
+
+    public void setOnLoadListener(OnLoadListener onLoadListener) {
+        this.onLoadListener = onLoadListener;
     }
 
     public void setOnCancelListener(OnCancelListener listener) {
