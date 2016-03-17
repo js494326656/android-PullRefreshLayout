@@ -9,6 +9,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -44,10 +45,21 @@ public class RecyclerViewActivity extends Activity {
                 }, 6000);
             }
         });
-        layout.setOnCancelListener(new PullRefreshLayout.OnCancelListener() {
+        layout.setOnCancelRefreshListener(new PullRefreshLayout.OnCancelRefreshListener() {
             @Override
             public void onCancel() {
                 Toast.makeText(RecyclerViewActivity.this,"cancel request",Toast.LENGTH_SHORT).show();
+            }
+        });
+        layout.setOnLoadListener(new PullRefreshLayout.OnLoadListener() {
+            @Override
+            public void onLoad() {
+                layout.postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        layout.setLoading(false);
+                    }
+                }, 6000);
             }
         });
     }
