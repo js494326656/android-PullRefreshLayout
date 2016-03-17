@@ -60,6 +60,11 @@ class ArcDrawable extends RefreshDrawable{
     }
 
     @Override
+    public void setTop(int top) {
+        mTop = top;
+    }
+
+    @Override
     public void start() {
         isRunning = true;
         mHandler.post(mAnimationTask);

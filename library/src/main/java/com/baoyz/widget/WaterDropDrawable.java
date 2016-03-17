@@ -125,6 +125,11 @@ class WaterDropDrawable extends RefreshDrawable implements Runnable {
     }
 
     @Override
+    public void setTop(int top) {
+        mTop = top;
+    }
+
+    @Override
     public void start() {
         mLevel = 2500;
         isRunning = true;

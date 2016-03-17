@@ -121,6 +121,11 @@ class CirclesDrawable extends RefreshDrawable implements Runnable {
     }
 
     @Override
+    public void setTop(int top) {
+        mTop = top;
+    }
+
+    @Override
     public void run() {
         mLevel += 80;
         if (mLevel > MAX_LEVEL)

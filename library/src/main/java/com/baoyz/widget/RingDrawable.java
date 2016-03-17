@@ -54,6 +54,11 @@ class RingDrawable extends RefreshDrawable {
     }
 
     @Override
+    public void setTop(int top) {
+        mBounds.top = top;
+    }
+
+    @Override
     public void start() {
         mLevel = 50;
         isRunning = true;

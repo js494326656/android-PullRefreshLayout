@@ -29,6 +29,7 @@ public abstract class RefreshDrawable extends Drawable implements Drawable.Callb
     public abstract void setColorSchemeColors(int[] colorSchemeColors);
 
     public abstract void offsetTopAndBottom(int offset);
+    public abstract void setTop(int top);
 
     @Override
     public void invalidateDrawable(Drawable who) {

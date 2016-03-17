@@ -314,6 +314,12 @@ class MaterialDrawable extends RefreshDrawable implements Animatable {
         mTop += offset;
         invalidateSelf();
     }
+
+    @Override
+    public void setTop(int top) {
+        mTop = top;
+    }
+
 //
 //    @Override
 //    public int getIntrinsicHeight() {

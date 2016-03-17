@@ -97,6 +97,12 @@ public class SmartisanDrawable extends RefreshDrawable {
     }
 
     @Override
+    public void setTop(int top) {
+        mOffset = top;
+
+    }
+
+    @Override
     public void start() {
         mRunning = true;
         mDegrees = 0;
