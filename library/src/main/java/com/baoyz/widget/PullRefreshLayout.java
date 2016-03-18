@@ -46,7 +46,7 @@ public class PullRefreshLayout extends ViewGroup {
     private int mTouchSlop;
     private int mSpinnerFinalOffset;
     private int mTotalDragDistance;
-    private RefreshDrawable mRefreshDrawable,mLoadDrawable;
+    private RefreshDrawable mRefreshDrawable, mLoadDrawable;
     private int mCurrentOffsetTop, mCurrentOffsetBottom;
     private boolean mRefreshing, mLoading;
     private int mActivePointerId;
@@ -174,7 +174,7 @@ public class PullRefreshLayout extends ViewGroup {
         heightMeasureSpec = MeasureSpec.makeMeasureSpec(getMeasuredHeight() - getPaddingTop() - getPaddingBottom(), MeasureSpec.EXACTLY);
         mTarget.measure(widthMeasureSpec, heightMeasureSpec);
         mRefreshView.measure(widthMeasureSpec, heightMeasureSpec);
-        mLoadView.measure(widthMeasureSpec,heightMeasureSpec);
+        mLoadView.measure(widthMeasureSpec, heightMeasureSpec);
 //        mRefreshView.measure(MeasureSpec.makeMeasureSpec(mRefreshViewWidth, MeasureSpec.EXACTLY), MeasureSpec.makeMeasureSpec(mRefreshViewHeight, MeasureSpec.EXACTLY));
     }
 
@@ -230,7 +230,7 @@ public class PullRefreshLayout extends ViewGroup {
                     mIsBeingDragged = !(yDiff < 0 && mCurrentOffsetTop <= 0);
                 } else if (yDiff > mTouchSlop && !mIsBeingDragged && !canChildScrollUp()) {
                     mIsBeingDragged = true;
-                } else if (!mIsBeingDragged && !isFullShorter() && !canChildScrollDown() && yDiff<-mTouchSlop && onLoadListener != null){
+                } else if (!mIsBeingDragged && !isFullShorter() && !canChildScrollDown() && yDiff < -mTouchSlop && onLoadListener != null) {
                     mIsBeingDragged = true;
                 }
                 break;
@@ -318,7 +318,7 @@ public class PullRefreshLayout extends ViewGroup {
                                 mTarget.dispatchTouchEvent(obtain);
                             }
                         } else {
-                            if (targetY > 0) {
+                            if (targetY >= 0) {
                                 if (mDispatchTargetTouchDown) {
                                     mTarget.dispatchTouchEvent(ev);
                                 } else {
@@ -344,7 +344,7 @@ public class PullRefreshLayout extends ViewGroup {
                 } else {
                     final float scrollTop = yDiff * DRAG_RATE;
                     float originalDragPercent = scrollTop / mTotalDragDistance;
-                    if (mCurrentOffsetTop >=0 && originalDragPercent < 0 && !canChildScrollUp()) {
+                    if (mCurrentOffsetTop >= 0 && originalDragPercent < 0 && !canChildScrollUp()) {
                         return false;
                     }
                     mDragPercent = Math.min(1f, Math.abs(originalDragPercent));
@@ -371,7 +371,7 @@ public class PullRefreshLayout extends ViewGroup {
                         if (scrollTop < mTotalDragDistance) {
                             mLoadDrawable.setPercent(mDragPercent);
                         }
-                        setTargetOffsetBottom( - targetY - mCurrentOffsetTop, true);
+                        setTargetOffsetBottom(-targetY - mCurrentOffsetTop, true);
                     }
                 }
                 break;
@@ -400,24 +400,21 @@ public class PullRefreshLayout extends ViewGroup {
                 }
                 if (overscrollTop > mTotalDragDistance) {
                     if (mLoading) {
-                        animateOffsetToEndPosition();
                         if (mCancelLoadListener != null) {
                             mCancelLoadListener.onCancel();
                         }
-                        mLoading = false;
-                    } else {
+                        setLoading(false);
+                    } else if (!canChildScrollUp()) {
                         setRefreshing(true, true);
                     }
                 } else if (overscrollTop > 0 && overscrollTop <= mTotalDragDistance) {
-                    if (!mRefreshing) {
+                    if (!mRefreshing && !canChildScrollUp()) {
                         animateOffsetToStartPosition();
-                    }
-                    if (mLoading) {
-                        animateOffsetToEndPosition();
+                    } else if (mLoading) {
                         if (mCancelLoadListener != null) {
                             mCancelLoadListener.onCancel();
                         }
-                        mLoading = false;
+                        setLoading(false);
                     }
                 } else {
                     if (mRefreshing) {
@@ -426,10 +423,10 @@ public class PullRefreshLayout extends ViewGroup {
                             mCancelRefreshListener.onCancel();
                         }
                         mRefreshing = false;
-                    } else if (overscrollTop < -mTotalDragDistance && onLoadListener != null) {
+                    } else if (overscrollTop < -mTotalDragDistance && !isFullShorter() && onLoadListener != null) {
                         setLoading(true);
                     } else if (overscrollTop < 0 && overscrollTop > -mTotalDragDistance && isTargetBottom() && onLoadListener != null) {
-                        if (!mLoading) {
+                        if (!mLoading && !isFullShorter()) {
                             animateOffsetToEndPosition();
                         }
                     }
@@ -516,7 +513,7 @@ public class PullRefreshLayout extends ViewGroup {
     private final Animation mAnimateToCorrectBottomPosition = new Animation() {
         @Override
         public void applyTransformation(float interpolatedTime, Transformation t) {
-            int endTarget = getPaddingTop()+getMeasuredHeight()-getPaddingBottom()-mSpinnerFinalOffset;
+            int endTarget = getPaddingTop() + getMeasuredHeight() - getPaddingBottom() - mSpinnerFinalOffset;
             int targetTop = (mFrom + (int) ((endTarget - mFrom) * interpolatedTime));
             int offset = targetTop - mTarget.getBottom();
             setTargetOffsetBottom(offset, false /* requires update */);
@@ -531,7 +528,7 @@ public class PullRefreshLayout extends ViewGroup {
     }
 
     private void moveToEnd(float interpolatedTime) {
-        int targetEnd = mFrom + (int) ((getPaddingTop()+getMeasuredHeight()-getPaddingBottom()-mFrom) * interpolatedTime);
+        int targetEnd = mFrom + (int) ((getPaddingTop() + getMeasuredHeight() - getPaddingBottom() - mFrom) * interpolatedTime);
         int offset = targetEnd - mTarget.getBottom();
         setTargetOffsetBottom(offset, false);
         mLoadDrawable.setPercent(mDragPercent * (1 - interpolatedTime));
@@ -632,6 +629,7 @@ public class PullRefreshLayout extends ViewGroup {
         @Override
         public void onAnimationStart(Animation animation) {
             mRefreshDrawable.stop();
+            mLoadDrawable.stop();
         }
 
         @Override
@@ -704,42 +702,42 @@ public class PullRefreshLayout extends ViewGroup {
 
     public boolean canChildScrollDown() {
 //        if (android.os.Build.VERSION.SDK_INT < 14) {
-            if (mTarget instanceof AbsListView) {
-                final AbsListView absListView = (AbsListView) mTarget;
-                View lastChild = absListView.getChildAt(absListView.getChildCount() - 1);
-                if (lastChild != null) {
-                    if (absListView.getFirstVisiblePosition() == 0 && absListView.getLastVisiblePosition() == (absListView.getCount() - 1)) {
-                        return false;
-                    }
-                    return (absListView.getLastVisiblePosition() < (absListView.getCount() - 1))
-                            && lastChild.getBottom() > absListView.getPaddingBottom();
-                } else {
+        if (mTarget instanceof AbsListView) {
+            final AbsListView absListView = (AbsListView) mTarget;
+            View lastChild = absListView.getChildAt(absListView.getChildCount() - 1);
+            if (lastChild != null) {
+                if (absListView.getFirstVisiblePosition() == 0 && absListView.getLastVisiblePosition() == (absListView.getCount() - 1)) {
                     return false;
                 }
-            } else if (mTarget instanceof RecyclerView) {
-                final RecyclerView recyclerView = (RecyclerView) mTarget;
-                View lastChild = recyclerView.getChildAt(recyclerView.getChildCount() - 1);
-                RecyclerView.LayoutManager lm = recyclerView.getLayoutManager();
-                if (lastChild != null) {
-                    return !(lm.canScrollVertically() && isTargetBottom());
-                } else {
-                    return false;
-                }
+                return (absListView.getLastVisiblePosition() < (absListView.getCount() - 1))
+                        && lastChild.getBottom() > absListView.getPaddingBottom();
             } else {
-                View scrollChild = ((ViewGroup) mTarget).getChildAt(0);
-                if (scrollChild == null) {
-                    return false;
-                } else {
-                    int childHeight = scrollChild.getMeasuredHeight();
-                    return (mTarget.getScaleY() + mTarget.getHeight()) < childHeight;
-                }
+                return false;
             }
+        } else if (mTarget instanceof RecyclerView) {
+            final RecyclerView recyclerView = (RecyclerView) mTarget;
+            View lastChild = recyclerView.getChildAt(recyclerView.getChildCount() - 1);
+            RecyclerView.LayoutManager lm = recyclerView.getLayoutManager();
+            if (lastChild != null) {
+                return !(lm.canScrollVertically() && isTargetBottom());
+            } else {
+                return false;
+            }
+        } else {
+            View scrollChild = ((ViewGroup) mTarget).getChildAt(0);
+            if (scrollChild == null) {
+                return false;
+            } else {
+                int childHeight = scrollChild.getMeasuredHeight();
+                return (mTarget.getScaleY() + mTarget.getHeight()) < childHeight;
+            }
+        }
 //        } else {
 //            return ViewCompat.canScrollVertically(mTarget, 1);
 //        }
     }
 
-    private boolean isTargetBottom(){
+    private boolean isTargetBottom() {
         if (mTarget instanceof AbsListView) {
             final AbsListView absListView = (AbsListView) mTarget;
             View lastChild = absListView.getChildAt(absListView.getChildCount() - 1);
@@ -765,7 +763,7 @@ public class PullRefreshLayout extends ViewGroup {
         return false;
     }
 
-    public boolean isFullShorter(){
+    public boolean isFullShorter() {
         if (mTarget instanceof AbsListView) {
             final AbsListView absListView = (AbsListView) mTarget;
             View lastChild = absListView.getChildAt(absListView.getChildCount() - 1);
@@ -776,21 +774,23 @@ public class PullRefreshLayout extends ViewGroup {
             } else {
                 return false;
             }
-        }else if (mTarget instanceof RecyclerView) {
+        } else if (mTarget instanceof RecyclerView) {
             final RecyclerView recyclerView = (RecyclerView) mTarget;
             RecyclerView.LayoutManager lm = recyclerView.getLayoutManager();
             return !lm.canScrollVertically();
         } else {
-            View scrollChild = ((ViewGroup)mTarget).getChildAt(0);
+            View scrollChild = ((ViewGroup) mTarget).getChildAt(0);
             if (scrollChild == null) {
                 return false;
-            }else {
+            } else {
                 int childHeight = scrollChild.getMeasuredHeight();
                 return childHeight < mTarget.getHeight();
             }
         }
         return true;
     }
+
+    private boolean resetLoadTop = false;
 
     @Override
     protected void onLayout(boolean changed, int l, int t, int r, int b) {
@@ -809,8 +809,9 @@ public class PullRefreshLayout extends ViewGroup {
         mTarget.layout(left, top + mTarget.getTop(), left + width - right, top + height - bottom + mTarget.getTop());
         mRefreshView.layout(left, top, left + width - right, top + height - bottom);
         mLoadView.layout(left, top, left + width - right, top + height - bottom);
-        if (mLoadDrawable != null) {
-            mLoadDrawable.setTop(top + height - bottom - (getFinalOffset() - dp2px(40))/2);
+        if (mLoadDrawable != null && !resetLoadTop) {
+            mLoadDrawable.setTop(top + height - bottom + (getFinalOffset() - dp2px(40)) / 2);
+            resetLoadTop = true;
         }
     }
 
