@@ -768,26 +768,30 @@ public class PullRefreshLayout extends ViewGroup {
             final AbsListView absListView = (AbsListView) mTarget;
             View lastChild = absListView.getChildAt(absListView.getChildCount() - 1);
             if (lastChild != null) {
-                if (absListView.getFirstVisiblePosition() == 0 && absListView.getLastVisiblePosition() == (absListView.getCount() - 1)) {
-                    return false;
-                }
+                return (absListView.getFirstVisiblePosition() == 0 && absListView.getLastVisiblePosition() == (absListView.getCount() - 1));
             } else {
-                return false;
+                return true;
             }
         } else if (mTarget instanceof RecyclerView) {
             final RecyclerView recyclerView = (RecyclerView) mTarget;
-            RecyclerView.LayoutManager lm = recyclerView.getLayoutManager();
-            return !lm.canScrollVertically();
+            LinearLayoutManager lm = (LinearLayoutManager) recyclerView.getLayoutManager();
+            if (recyclerView.getChildCount() > 0) {
+                int count = recyclerView.getAdapter().getItemCount() - 1;
+                return (recyclerView.getAdapter().getItemCount() == 0
+                        || (lm.findLastVisibleItemPosition() == count
+                        && lm.findFirstVisibleItemPosition() == 0));
+            } else {
+                return true;
+            }
         } else {
             View scrollChild = ((ViewGroup) mTarget).getChildAt(0);
             if (scrollChild == null) {
-                return false;
+                return true;
             } else {
                 int childHeight = scrollChild.getMeasuredHeight();
                 return childHeight < mTarget.getHeight();
             }
         }
-        return true;
     }
 
     private boolean resetLoadTop = false;
