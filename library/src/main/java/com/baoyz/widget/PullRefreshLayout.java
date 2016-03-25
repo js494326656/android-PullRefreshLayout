@@ -775,7 +775,7 @@ public class PullRefreshLayout extends ViewGroup {
         } else if (mTarget instanceof RecyclerView) {
             final RecyclerView recyclerView = (RecyclerView) mTarget;
             LinearLayoutManager lm = (LinearLayoutManager) recyclerView.getLayoutManager();
-            if (recyclerView.getChildCount() > 0) {
+            if (recyclerView.getAdapter() != null) {
                 int count = recyclerView.getAdapter().getItemCount() - 1;
                 return (recyclerView.getAdapter().getItemCount() == 0
                         || (lm.findLastVisibleItemPosition() == count
